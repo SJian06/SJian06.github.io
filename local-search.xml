@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  
+  
+  
+  <entry>
+    <title>C++学习日志--C++11部分新特性</title>
+    <link href="/c-daytwo/"/>
+    <url>/c-daytwo/</url>
+    
+    <content type="html"><![CDATA[<p>学习主题: C++ 11 特性、 部分c++的并发知识多线程</p><h3 id="委托构造函数-和-继承构造函数"><a href="#委托构造函数-和-继承构造函数" class="headerlink" title="委托构造函数 和 继承构造函数"></a>委托构造函数 和 继承构造函数</h3><ol><li>若某个类具有多个构造函数，为了简化代码，可以使用委托构造函数的特性。即使用本身已经定义好的构造函数。</li></ol><p>  需要注意的是，构造函数调用不能成为一个环，而且在使用委托构造函数的时候就不能使用初始化列表的方式来给成员变量进行初始化。</p><blockquote><p>class A{</p><p>int a;    </p><p>float b;</p><p>A(int a):a(a){};</p><p>A(float b):b(b){};</p><p>A(int a, float b): A(a){}</p><p>&#x2F;&#x2F;不可以同时调用两个委托构造</p><p>}</p></blockquote><ol start="2"><li>子类可以使用父类的构造方法，叫做继承构造函数。</li></ol><p>  代码略，就是继承类的构造方法调用父类的构造方法用来初始化父类相关的变量。</p><h3 id="内存对齐"><a href="#内存对齐" class="headerlink" title="内存对齐"></a>内存对齐</h3><p>这段略去了，感觉就是底层细枝末节的东西，某个结构体或者是类在内存中存储的大小并不是简单的内部类型相加之和。为了提高数据存取的效率，就会用到内存对齐的思维。</p><h3 id="新增加的便利算法"><a href="#新增加的便利算法" class="headerlink" title="新增加的便利算法"></a>新增加的便利算法</h3><ol><li><p>all_off、any_of、none_of，用来判断在某个区间内是否存在满足相关表达式的布尔值,这些函数的逻辑含义分别为 全部都满足、任意满足和都不满足</p></li><li><p>find_if_not 在某个区间内查找出第一个不满足条件的值的位置。</p></li><li><p>copy_if 把满足某个条件的元素进行拷贝</p></li><li><p>itoa生成有序序列</p></li><li><p>is_sorted等函数用来判断集序列是否有序</p></li></ol><h3 id="使用时间和日期相关的库-chrono"><a href="#使用时间和日期相关的库-chrono" class="headerlink" title="使用时间和日期相关的库 chrono"></a>使用时间和日期相关的库 chrono</h3><ol><li><p>std::ratio 代表时钟的周期数 ratio&lt;2&gt;代表一周期为两秒，ratio&lt;1,2&gt;代表0.5秒</p></li><li><p>chrono::seconds、chrono::minutes、chrono::hours，是设置好的duration别名,分别用来表示秒、分钟、小时的单位。</p></li><li><p>使用system_clock来表示系统的时间，这个结果和操作系统的时间相关联。system_clock::now()来表示获取当前时间点,返回类型值为 system_clock::time_pointer</p></li></ol><h3 id="数组类型和字符串类型相互转换"><a href="#数组类型和字符串类型相互转换" class="headerlink" title="数组类型和字符串类型相互转换"></a>数组类型和字符串类型相互转换</h3><ol><li><p>to_string()转化为 std::string 对象</p></li><li><p>string转化为别的类型。可以使用 atoi、atol、atoll、atof分别意味着转化成int、long、longlong、float</p></li><li><p>宽窄字符的转换(在MFC框架里面碰到过)</p></li></ol>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>c++</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  <entry>
+    <title>C++学习日志--线程池模型</title>
+    <link href="/one/"/>
+    <url>/one/</url>
+    
+    <content type="html"><![CDATA[<p>学习主题: 线程池bug修改</p><h1 id="报错的问题原因"><a href="#报错的问题原因" class="headerlink" title="报错的问题原因"></a>报错的问题原因</h1><ol><li><h3 id="内部编译问题"><a href="#内部编译问题" class="headerlink" title="内部编译问题"></a>内部编译问题</h3><p>主要是在给条件变量传输一个可调用对象时，定义了一个lambda表达式，在表达式内没有加 ; 结尾，没有捕获 <strong>this</strong> 指针,即 [this] ，导致一堆语法上的错误</p></li><li><h3 id="无法解析的外部符号"><a href="#无法解析的外部符号" class="headerlink" title="无法解析的外部符号"></a>无法解析的外部符号</h3><p>这个问题还没有完全解决掉，在源文件中实现这个函数会报错，而把相同的代码迁移到头文件中却没有。为了实现申明和实现的分离，尽量还是在源文件中去写实现的代码</p><img title="" src="../img/one/one-1.png" alt="" data-align="center" width="586"><img title="" src="../img/one/one-2.png" alt="" data-align="center" width="579"></li></ol><p>线程池的代码写完，总结下来大多数的步骤并不难，如果想让代码块避免竞争加个互斥锁就好了。</p><p>线程池的这个架构需要明白，其内部的线程称为异步线程，在整个架构中充当消费者的角色。从同步任务队列当中获取可调用对象并调用；在测试的代码中开辟的两个线程称为同步线程，这两个线程充当生产者的角色，在同步队列中添加任务给异步线程执行。</p><p>关键点在于这个同步任务队列的设计，需要使用条件变量来阻塞线程确保队列不溢出、不取空。</p>]]></content>
+    
+    
+    
+    <tags>
+      
+      <tag>c++</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
+  
+</search>
